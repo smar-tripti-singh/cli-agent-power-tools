@@ -1,93 +1,128 @@
-# slack-power-tool
+# CLI Agent Power Tools for Smartsheet
 
+Three free, opinionated Claude Code agents that turn the most common project-manager tasks into a sentence you type instead of an hour you click through.
 
+**Find the bottleneck. Reassign the work. Clone the engagement.** All from your terminal, all using the free Smartsheet MCP tools, all installable in sixty seconds.
 
-## Getting started
+---
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## What this is
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+A starter pack of three local agents for [Claude Code](https://docs.claude.com/en/docs/claude-code/overview), purpose-built against the [Smartsheet MCP server](https://mcp.smartsheet.com). Each one is a single markdown file under `.claude/agents/`. They activate automatically when you ask the right question, and they come pre-loaded with twenty years of Smartsheet behavior baked in.
 
-## Add your files
+| Stage | Power Tool | The prompt | What it replaces |
+|---|---|---|---|
+| **READ** | `bottleneck-scanner` | *"Who's the bottleneck across my active projects?"* | ~45 minutes of opening sheets, counting tasks by owner, cross-checking thread context |
+| **WRITE** | `reassignment-helper` | *"Reassign everything from Alex to Jordan."* | ~30 minutes of filtering each sheet, clicking each row, checking access |
+| **CREATE** | `engagement-cloner` | *"Clone this project sheet for a new engagement."* | ~60 minutes of finding a template, copying, clearing data, renaming, re-sharing |
 
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+These aren't just prompts. Each Power Tool is a **local agent** on your machine that orchestrates deep calls into our platform — reading discussion threads, writing to the work graph, composing against our 42 production MCP tools, all within your existing Smartsheet permissions. Local intelligence on your terminal, commanding twenty years of Smartsheet behavior.
+
+---
+
+## Why these three, in this order
+
+The adoption arc that actually works is **Read → Write → Create.**
+
+Start with the question you'd be embarrassed to ask a human — read-only, nothing changes, you just want to know. Move to the change you used to do by hand — previewed, confirmed, batched. End at the creation task you're tired of doing at the start of every engagement.
+
+Most teams try to lead with the most impressive demo. Most teams burn out on AI adoption because the impressive demo was a write operation that made a mistake in week two. This pack is ordered the way real trust gets built.
+
+---
+
+## Sixty-second install
+
+```bash
+# 1. Install Claude Code
+npm install -g @anthropic-ai/claude-code
+
+# 2. Clone this pack
+git clone https://github.com/smartsheet/cli-agent-power-tools
+cd cli-agent-power-tools
+
+# 3. Connect the Smartsheet MCP server
+claude mcp add --transport http smartsheet https://mcp.smartsheet.com
+
+# 4. Start Claude Code — Power Tools load automatically from .claude/agents/
+claude
+```
+
+Then just ask:
 
 ```
-cd existing_repo
-git remote add origin https://git.lab.smartsheet.com/breeze/connectors/slack-power-tool.git
-git branch -M mainline
-git push -uf origin mainline
+> Who's the bottleneck across my active projects?
 ```
 
-## Integrate with your tools
+Power Tools route automatically based on what you ask. You can also invoke them explicitly: `use bottleneck-scanner on the Healthcare practice`.
 
-* [Set up project integrations](https://git.lab.smartsheet.com/breeze/connectors/slack-power-tool/-/settings/integrations)
+---
 
-## Collaborate with your team
+## How this differs from Smartsheet's platform sub-agents
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+Worth making this explicit, because the words look similar.
 
-## Test and Deploy
+**Smartsheet's platform sub-agents** are the production-grade, credit-bearing intelligence layer inside SmartAssist — Risk Analysis, Dependency Detection, Executive Summary, Resource Optimizer, and others. They run on Smartsheet's infrastructure, use proprietary execution data across 100K+ organizations, and are what customers are paying for when they use the platform's AI features.
 
-Use the built-in continuous integration in GitLab.
+**CLI Agent Power Tools** are something different. They're personal prompt configurations that live on your laptop, run in your Claude Code session, and use only the free read/write/create MCP tools our server already exposes publicly. They don't invoke platform sub-agents. They don't carry Smartsheet's proprietary intelligence. They're the "get more out of the MCP tools you already have" toolkit.
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
+Think of it this way: platform sub-agents are the industrial machinery. Power Tools are the sharp hand tools you keep in your desk drawer. Both useful, both Smartsheet-made, different jobs.
 
-***
+---
 
-# Editing this README
+## Folder structure
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+```
+cli-agent-power-tools/
+├── .claude/
+│   └── agents/
+│       ├── bottleneck-scanner.md       ← READ
+│       ├── reassignment-helper.md      ← WRITE
+│       └── engagement-cloner.md        ← CREATE
+├── .mcp.json                           # Shared team MCP config
+├── LICENSE                             # MIT
+├── CONTRIBUTING.md                     # How to submit new Power Tools
+├── USAGE.md                            # Invocation, task automation, chaining
+└── README.md                           # This file
+```
 
-## Suggestions for a good README
+One git pull gets your whole team the same setup.
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+---
 
-## Name
-Choose a self-explaining name for your project.
+## What's next
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+This is v1. If these find their people, we'll ship expansion packs:
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+- **Daily Cadence pack** — `risk-scanner`, `standup-prep`, `status-comms-writer`. For teams that want AI running the daily rhythm, not just the portfolio-level work.
+- **Governance pack** — `data-quality-auditor`, `dropdown-standardizer`, `stale-cleanup`, `permission-sweep`. For the PMO that owns sheet hygiene at scale.
+- **Setup pack** — `workspace-organizer`, `template-converter`, `starter-sharer`. For the first 30 days of a new team or customer onboarding.
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+Pull requests welcome. See `CONTRIBUTING.md`.
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+---
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+## The bigger idea
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+Everyone in enterprise software this quarter is gluing a chatbot onto a shallow product and calling it AI. Talk to your todo list. Ask your spreadsheet a question. Cute demos; not much underneath.
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+Our MCP isn't reaching into a todo list. It's reaching into twenty years of workflow engine, a full dependency graph, row-level discussion threads, workspace hierarchy, formula resolution, cross-sheet references, permission model, and governance built before "AI governance" was a phrase anyone said out loud.
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+Put a terminal on top of a calendar app — you get a gimmick. Put a terminal on top of *that* — and a project manager can run a portfolio from it.
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+The CLI isn't the point. The work graph is the point. Local agents are the mechanism that lets you compose against twenty years of operational depth, at the speed of a sentence.
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+---
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+## A note on the underlying mechanism
+
+For the technically curious: CLI Agent Power Tools are implemented as [Claude Code sub-agents](https://docs.claude.com/en/docs/claude-code/overview) — markdown files with YAML frontmatter under `.claude/agents/`. We call them Power Tools in our copy to keep them clearly distinct from Smartsheet's platform sub-agents, which are a separate product concept. The mechanism is Anthropic's; the domain expertise baked in is ours.
+
+---
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+MIT. Take it, fork it, ship derivatives. See `LICENSE`.
+
+---
+
+*Built by the Smartsheet AI Platform team. Maintained by Drew Garner, SVP of AI & Platform Strategy.*
