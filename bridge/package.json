@@ -1,0 +1,19 @@
+{
+  "name": "smartbridge",
+  "version": "0.1.0",
+  "description": "Connect Smartsheet Power Tools to Slack",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "setup": "node src/setup.js",
+    "disconnect": "node src/index.js disconnect"
+  },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "dependencies": {
+    "@slack/bolt": "^4.7.0",
+    "cross-spawn": "^7.0.6"
+  },
+  "license": "MIT"
+}

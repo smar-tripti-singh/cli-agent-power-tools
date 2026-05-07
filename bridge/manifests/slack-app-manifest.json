@@ -1,0 +1,39 @@
+{
+  "display_information": {
+    "name": "SmartBridge",
+    "description": "Smartsheet Power Tools for your team — scan risks, find bottlenecks, reassign work, all from Slack.",
+    "background_color": "#2563eb"
+  },
+  "features": {
+    "bot_user": {
+      "display_name": "SmartBridge",
+      "always_online": true
+    }
+  },
+  "oauth_config": {
+    "scopes": {
+      "bot": [
+        "chat:write",
+        "app_mentions:read",
+        "channels:history",
+        "groups:history",
+        "im:history",
+        "im:read",
+        "im:write"
+      ]
+    }
+  },
+  "settings": {
+    "event_subscriptions": {
+      "bot_events": [
+        "app_mention",
+        "message.im"
+      ]
+    },
+    "interactivity": {
+      "is_enabled": false
+    },
+    "org_deploy_enabled": false,
+    "socket_mode_enabled": true
+  }
+}
