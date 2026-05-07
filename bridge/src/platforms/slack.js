@@ -50,13 +50,17 @@ class SlackMessage extends Message {
   }
 
   async postStatus(text) {
-    const res = await this._client.chat.postMessage({
-      channel: this._channel,
-      thread_ts: this._threadTs,
-      text,
-      mrkdwn: true,
-    });
-    this._statusMessageId = res.ts;
+    try {
+      const res = await this._client.chat.postMessage({
+        channel: this._channel,
+        thread_ts: this._threadTs,
+        text,
+        mrkdwn: true,
+      });
+      this._statusMessageId = res.ts;
+    } catch (err) {
+      log.error('postStatus failed', { err: err.message, channel: this._channel });
+    }
   }
 
   async updateStatus(text) {
@@ -95,6 +99,7 @@ class SlackPlatform extends Platform {
     });
 
     this._app.event('app_mention', async ({ event, client }) => {
+      log.info('app_mention received', { user: event.user, channel: event.channel });
       if (myUserId && event.user !== myUserId) return;
       const text = (event.text || '').replace(/<@[A-Z0-9]+>/g, '').trim();
       if (!text) return;
