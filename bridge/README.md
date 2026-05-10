@@ -6,13 +6,13 @@ Connect Smartsheet Power Tools to Slack. Ask questions in Slack, Power Tools run
 
 ```
 You in Slack: "@SmartBridge what's at risk?"
-  → Your local SmartBridge receives the message (Socket Mode)
-  → Spawns Claude Code with the right Power Tool agent
+  → Your local SmartBridge polls the channel for new messages
+  → Sees your @mention, spawns Claude Code with the right Power Tool agent
   → Agent reads Smartsheet data via MCP
   → Result posted back to the Slack thread
 ```
 
-Each user runs SmartBridge on their own machine.
+Each user runs SmartBridge on their own machine. All users share the same Slack app (one bot identity), but each process only responds to its own messages.
 
 ## Prerequisites
 
@@ -33,7 +33,7 @@ npm install
 
 First, check if **SmartBridge** already exists in your workspace — search for "@SmartBridge" in Slack or ask your workspace admin.
 
-**If the app already exists:** skip to Step 3 — just get the tokens from your admin or from the app settings.
+**If the app already exists:** skip to Step 3 — just get the Bot Token from your admin or from the app settings.
 
 **If the app does NOT exist** (one-time, by workspace admin), create it using either option:
 
@@ -49,21 +49,11 @@ First, check if **SmartBridge** already exists in your workspace — search for 
 5. Click **Create**
 6. Go to **Install App** → click **Install to Workspace** → **Allow**
 
-### Step 3: Get your tokens
+### Step 3: Get your Bot Token
 
-After the app exists, you need two tokens:
-
-**Bot Token (xoxb-):**
 - Go to [api.slack.com/apps](https://api.slack.com/apps) → click **SmartBridge**
 - Go to **OAuth & Permissions**
 - Copy the **Bot User OAuth Token** (starts with `xoxb-`)
-
-**App-Level Token (xapp-):**
-- Go to [api.slack.com/apps](https://api.slack.com/apps) → click **SmartBridge**
-- Go to **Basic Information**
-- Scroll to **App-Level Tokens**
-- If no token exists: click **Generate Token and Scopes**, name it anything (e.g. "socket"), add scope `connections:write`, click **Generate**
-- Copy the token (starts with `xapp-`)
 
 ### Step 4: Run setup
 
@@ -74,8 +64,7 @@ npm run setup
 The setup will walk you through:
 1. Checking if the app exists in your workspace
 2. Pasting your Bot Token (xoxb-)
-3. Pasting your App-Level Token (xapp-)
-4. Entering your Slack User ID
+3. Entering your Slack User ID
 
 **Finding your Slack User ID:**
 In Slack, click your profile picture → **Profile** → click **⋮** (more) → **Copy member ID**
@@ -107,11 +96,11 @@ Listening... (Ctrl+C to stop)
 
 If the Slack app already exists (created by admin), each new user just needs:
 
-1. Get the Bot Token and App-Level Token from admin, or find them at:
-   - **Bot Token:** [api.slack.com/apps](https://api.slack.com/apps) → SmartBridge → OAuth & Permissions
-   - **App Token:** [api.slack.com/apps](https://api.slack.com/apps) → SmartBridge → Basic Information → App-Level Tokens
-2. Run `npm run setup` and paste the tokens + their own User ID
-3. Run `npm start`
+1. Clone the repo, set up Power Tools (Smartsheet MCP)
+2. Get the Bot Token from admin or from [api.slack.com/apps](https://api.slack.com/apps) → SmartBridge → OAuth & Permissions
+3. Run `npm run setup` — paste the Bot Token + their own User ID
+4. Invite the bot to their channel: `/invite @SmartBridge`
+5. Run `npm start`
 
 ## Commands
 
@@ -147,8 +136,9 @@ Claude Code picks the right Power Tool automatically based on what you ask.
 All users share the same Slack app (one bot identity: @SmartBridge). Each user:
 - Runs their own local process
 - Configures their own User ID
-- Only receives responses to their own messages
+- Only processes their own messages
 
+SmartBridge uses polling (reads channel history every 10 seconds) instead of WebSocket. This means every user's process independently reads the channel and filters for their own messages — no conflicts, no dropped events.
 
 ## Disconnect
 
@@ -158,7 +148,7 @@ To remove your local configuration:
 npm run disconnect
 ```
 
-This clears your tokens and User ID from `~/.smartbridge/config.json`. It does NOT:
+This clears your Bot Token and User ID from `~/.smartbridge/config.json`. It does NOT:
 - Delete the Slack app from the workspace
 - Affect other users
 - Touch your Power Tools setup
@@ -175,7 +165,7 @@ bridge/
 │   │   ├── dispatcher.js     Routes messages → runner, manages sessions
 │   │   └── runner.js         Spawns claude -p, streams results
 │   ├── platforms/
-│   │   └── slack.js          Slack Socket Mode + user ID filtering
+│   │   └── slack.js          Slack polling + user ID filtering
 │   └── lib/
 │       ├── config.js         Config manager (~/.smartbridge/)
 │       └── logger.js         Structured logger

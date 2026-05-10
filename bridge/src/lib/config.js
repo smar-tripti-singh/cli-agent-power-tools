@@ -8,11 +8,12 @@ const PID_FILE = path.join(CONFIG_DIR, 'smartbridge.pid');
 const LOG_DIR = path.join(CONFIG_DIR, 'logs');
 
 const DEFAULTS = {
-  slack: { botToken: null, appToken: null, connected: false, workspaceName: null },
+  slack: { botToken: null, connected: false, workspaceName: null },
   userId: null,
   settings: {
     maxConcurrentJobs: 3,
     jobTimeoutMs: 600000,
+    pollIntervalMs: 10000,
   },
   powerToolsDir: null,
 };

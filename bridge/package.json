@@ -12,7 +12,7 @@
     "node": ">=18.17"
   },
   "dependencies": {
-    "@slack/bolt": "^4.7.0",
+    "@slack/web-api": "^7.0.0",
     "cross-spawn": "^7.0.6"
   },
   "license": "MIT"

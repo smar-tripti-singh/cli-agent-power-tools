@@ -33,7 +33,7 @@ async function stopPlatforms() {
 async function cmdStart() {
   const cfg = config.load();
 
-  if (!cfg.slack?.botToken || !cfg.slack?.appToken) {
+  if (!cfg.slack?.botToken) {
     console.log('Not configured. Run setup first:\n');
     console.log('  npm run setup');
     console.log('  # or');
@@ -107,7 +107,7 @@ function cmdDisconnect() {
   }
 
   config.update({
-    slack: { botToken: null, appToken: null, connected: false, workspaceName: null },
+    slack: { botToken: null, connected: false, workspaceName: null },
     userId: null,
   });
 

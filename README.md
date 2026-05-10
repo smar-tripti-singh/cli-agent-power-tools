@@ -70,30 +70,6 @@ Power Tools route automatically based on what you ask. You can also invoke them 
 
 ---
 
-## Slack integration (SmartBridge)
-
-Want Power Tools results in Slack instead of your terminal? The `bridge/` directory contains **SmartBridge** — a local adapter that connects your Power Tools to Slack via Socket Mode.
-
-```
-You in Slack: "@SmartBridge what's at risk?"
-  → Your local SmartBridge receives the message
-  → Spawns the right Power Tool agent
-  → Result posted back to the Slack thread
-```
-
-No server required — each user runs it on their own machine. One Slack app per workspace (created by admin), then each team member clones the repo, runs `npm run setup`, and starts listening.
-
-```bash
-cd bridge
-npm install
-npm run setup    # paste tokens + your Slack User ID
-npm start        # listening for @SmartBridge mentions
-```
-
-See [`bridge/README.md`](bridge/README.md) for full setup instructions.
-
----
-
 ## How this differs from Smartsheet's platform sub-agents
 
 Worth making this explicit, because the words look similar.
@@ -118,7 +94,6 @@ cli-agent-power-tools/
 │       ├── risk-scanner.md             ← SCAN
 │       ├── standup-prep.md             ← BRIEF
 │       └── status-comms-writer.md      ← DRAFT
-├── bridge/                             # Slack integration (SmartBridge)
 ├── .mcp.json                           # Shared team MCP config
 ├── LICENSE                             # MIT
 ├── CONTRIBUTING.md                     # How to submit new Power Tools
