@@ -1,6 +1,5 @@
-const { App } = require('@slack/bolt');
-const { Platform, Message } = require('../core/platform');
-const { make } = require('../lib/logger');
+const { Message } = require('../../core/platform');
+const { make } = require('../../lib/logger');
 
 const log = make('slack');
 const SLACK_LIMIT = 3500;
@@ -30,7 +29,7 @@ class SlackMessage extends Message {
       userName: event.user,
       threadId: event.thread_ts || event.ts,
       channelId: event.channel,
-      platform,
+      platform: platform || 'slack',
     });
     this._client = client;
     this._channel = event.channel;
@@ -76,60 +75,4 @@ class SlackMessage extends Message {
   }
 }
 
-class SlackPlatform extends Platform {
-  constructor() {
-    super();
-    this._app = null;
-  }
-
-  get name() { return 'slack'; }
-
-  isConfigured(config) {
-    return !!(config.slack?.botToken && config.slack?.appToken);
-  }
-
-  async start(config, dispatcher) {
-    const { botToken, appToken } = config.slack;
-    const myUserId = config.userId;
-
-    this._app = new App({
-      token: botToken,
-      appToken,
-      socketMode: true,
-    });
-
-    this._app.event('app_mention', async ({ event, client }) => {
-      log.info('app_mention received', { user: event.user, channel: event.channel });
-      if (myUserId && event.user !== myUserId) return;
-      const text = (event.text || '').replace(/<@[A-Z0-9]+>/g, '').trim();
-      if (!text) return;
-      const msg = new SlackMessage({ client, event: { ...event, text }, platform: 'slack' });
-      await dispatcher.handle(msg, config);
-    });
-
-    this._app.message(async ({ message, client }) => {
-      if (message.channel_type !== 'im') return;
-      if (message.bot_id || message.subtype) return;
-      if (myUserId && message.user !== myUserId) return;
-      const msg = new SlackMessage({ client, event: message, platform: 'slack' });
-      await dispatcher.handle(msg, config);
-    });
-
-    this._app.error((err) => {
-      log.error('slack error', { err: err.message });
-    });
-
-    await this._app.start();
-    log.info('slack connected via socket mode');
-  }
-
-  async stop() {
-    if (this._app) {
-      await this._app.stop();
-      this._app = null;
-      log.info('slack disconnected');
-    }
-  }
-}
-
-module.exports = { SlackPlatform };
+module.exports = { SlackMessage, chunk };

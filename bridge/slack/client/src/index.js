@@ -7,8 +7,12 @@ const VERSION = require('../package.json').version;
 
 const platforms = [];
 
-function loadPlatforms() {
-  try { platforms.push(new (require('./platforms/slack').SlackPlatform)()); } catch {}
+function loadPlatforms(mode) {
+  if (mode === 'relay') {
+    try { platforms.push(new (require('./platforms/slack').SlackRelayPlatform)()); } catch {}
+  } else {
+    try { platforms.push(new (require('./platforms/slack').SlackPollingPlatform)()); } catch {}
+  }
 }
 
 async function startPlatforms(cfg) {
@@ -19,7 +23,11 @@ async function startPlatforms(cfg) {
         log.info(`${p.name} connected`);
       } catch (err) {
         log.error(`${p.name} failed to start`, { err: err.message });
+        process.exit(1);
       }
+    } else {
+      log.error(`${p.name} not configured — run setup first`);
+      process.exit(1);
     }
   }
 }
@@ -30,21 +38,30 @@ async function stopPlatforms() {
   }
 }
 
-async function cmdStart() {
+async function cmdStart(mode) {
   const cfg = config.load();
+  const resolvedMode = mode || cfg.mode || 'polling';
 
-  if (!cfg.slack?.botToken || !cfg.slack?.appToken) {
-    console.log('Not configured. Run setup first:\n');
-    console.log('  npm run setup');
-    console.log('  # or');
-    console.log('  node src/setup.js\n');
-    process.exit(1);
+  if (resolvedMode === 'polling') {
+    if (!cfg.slack?.botToken) {
+      console.log('Not configured. Run setup first:\n\n  npm run setup\n');
+      process.exit(1);
+    }
+    if (!cfg.userId) {
+      console.log('User ID not set. Run setup first:\n\n  npm run setup\n');
+      process.exit(1);
+    }
   }
 
-  if (!cfg.userId) {
-    console.log('User ID not set. Run setup first:\n');
-    console.log('  npm run setup\n');
-    process.exit(1);
+  if (resolvedMode === 'relay') {
+    const fs = require('fs');
+    const path = require('path');
+    const os = require('os');
+    const relayFile = path.join(os.homedir(), '.smartbridge', 'relay.json');
+    if (!fs.existsSync(relayFile)) {
+      console.log('Relay not configured. Register first:\n\n  npm run relay:register\n');
+      process.exit(1);
+    }
   }
 
   const ptDir = config.resolvePowerToolsDir();
@@ -52,19 +69,26 @@ async function cmdStart() {
     log.error('Could not find Power Tools directory. Run from the cli-agent-power-tools repo.');
     process.exit(1);
   }
-  config.update({ powerToolsDir: ptDir });
+  config.update({ powerToolsDir: ptDir, mode: resolvedMode });
 
-  loadPlatforms();
+  loadPlatforms(resolvedMode);
 
   console.log(`SmartBridge v${VERSION}`);
-  console.log(`  Workspace: ${cfg.slack.workspaceName || '(unknown)'}`);
-  console.log(`  User ID:   ${cfg.userId}`);
-  console.log(`  Filtering: only responding to your messages\n`);
+  if (resolvedMode === 'polling') {
+    console.log(`  Mode:      polling (every 10s)`);
+    console.log(`  Workspace: ${cfg.slack.workspaceName || '(unknown)'}`);
+    console.log(`  User ID:   ${cfg.userId}`);
+  } else {
+    const relayData = JSON.parse(require('fs').readFileSync(
+      require('path').join(require('os').homedir(), '.smartbridge', 'relay.json'), 'utf8'
+    ));
+    console.log(`  Mode:      relay`);
+    console.log(`  Server:    ${relayData.serverUrl}`);
+  }
+  console.log(`\nListening... (Ctrl+C to stop)\n`);
 
   await startPlatforms(cfg);
   config.writePid();
-
-  console.log('Listening... (Ctrl+C to stop)\n');
 }
 
 function cmdStatus() {
@@ -72,6 +96,7 @@ function cmdStatus() {
     const pid = config.readPid();
     const cfg = config.load();
     console.log(`SmartBridge is running (PID: ${pid})`);
+    console.log(`  Mode:      ${cfg.mode || 'polling'}`);
     console.log(`  Workspace: ${cfg.slack?.workspaceName || '(unknown)'}`);
     console.log(`  User ID:   ${cfg.userId || '(not set)'}`);
   } else {
@@ -99,7 +124,6 @@ function cmdDisconnect() {
     return;
   }
 
-  // Stop if running
   const pid = config.readPid();
   if (pid) {
     try { process.kill(pid, 'SIGTERM'); } catch {}
@@ -107,7 +131,7 @@ function cmdDisconnect() {
   }
 
   config.update({
-    slack: { botToken: null, appToken: null, connected: false, workspaceName: null },
+    slack: { botToken: null, connected: false, workspaceName: null },
     userId: null,
   });
 
@@ -125,14 +149,18 @@ function cmdHelp() {
 SmartBridge v${VERSION}
 Connect Smartsheet Power Tools to Slack
 
-Commands:
-  smartbridge setup        First-time setup (interactive)
-  smartbridge start        Start listening for Slack messages
-  smartbridge stop         Stop the bot
-  smartbridge status       Check if running
-  smartbridge disconnect   Remove your local Slack configuration
-  smartbridge help         Show this help
-  smartbridge --version    Show version
+Polling mode (no server required):
+  npm run setup            First-time setup (Bot Token + User ID)
+  npm start                Start polling Slack every 10 seconds
+
+Relay mode (org-hosted server):
+  npm run relay:register   Register with relay server
+  npm run start:relay      Connect to relay server
+
+Other commands:
+  npm run stop             Stop the bot
+  npm run status           Check if running
+  npm run disconnect       Remove your local Slack configuration
 `);
 }
 
@@ -148,12 +176,20 @@ const cmd = process.argv[2] || 'start';
 
 switch (cmd) {
   case 'start':
-    cmdStart().catch((err) => { log.error('startup failed', { err: err.message }); process.exit(1); });
+    cmdStart('polling').catch((err) => { log.error('startup failed', { err: err.message }); process.exit(1); });
+    process.once('SIGINT', () => shutdown('SIGINT'));
+    process.once('SIGTERM', () => shutdown('SIGTERM'));
+    break;
+  case 'start:relay':
+    cmdStart('relay').catch((err) => { log.error('startup failed', { err: err.message }); process.exit(1); });
     process.once('SIGINT', () => shutdown('SIGINT'));
     process.once('SIGTERM', () => shutdown('SIGTERM'));
     break;
   case 'setup':
     require('./setup');
+    break;
+  case 'relay:register':
+    require('./relay-register');
     break;
   case 'stop':
     cmdStop();

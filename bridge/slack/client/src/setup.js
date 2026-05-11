@@ -51,11 +51,13 @@ function slackAuthTest(token) {
 }
 
 async function run() {
-  console.log(`\n${BOLD}SmartBridge Setup${RESET}\n`);
+  console.log(`\n${BOLD}SmartBridge Setup (Polling mode)${RESET}\n`);
+  console.log(`${DIM}This sets up polling mode — your machine polls Slack every 10s.`);
+  console.log(`For relay mode (org server), use: npm run relay:register${RESET}\n`);
 
   // Check existing config
   const existing = config.load();
-  if (existing.slack?.botToken && existing.slack?.appToken && existing.userId) {
+  if (existing.slack?.botToken && existing.userId) {
     console.log(`${GREEN}Existing configuration found:${RESET}`);
     console.log(`  Workspace: ${existing.slack.workspaceName || '(unknown)'}`);
     console.log(`  User ID:   ${existing.userId}\n`);
@@ -70,33 +72,30 @@ async function run() {
 
   // Step 1: Does the app exist?
   console.log(`${BOLD}Step 1: Slack App${RESET}`);
-  console.log(`${DIM}Check if SmartBridge bot already exists in your Slack workspace.${RESET}`);
-  console.log(`${DIM}Look in Slack sidebar or search for "@SmartBridge"${RESET}\n`);
+  console.log(`${DIM}Check if SmartBridge already exists in your workspace.${RESET}`);
+  console.log(`${DIM}Search for "@SmartBridge" in Slack or ask your workspace admin.${RESET}\n`);
 
   const appExists = await ask('Is SmartBridge already in your workspace? (y/n): ');
 
   if (appExists.toLowerCase() !== 'y') {
     console.log(`\n${BOLD}Creating the app:${RESET}`);
-    console.log(`  Opening: ${DIM}${MANIFEST_URL.slice(0, 60)}...${RESET}\n`);
+    console.log(`  Opening browser with manifest pre-loaded...\n`);
     console.log('  In the browser:');
     console.log('  1. Pick your workspace from the dropdown');
     console.log('  2. Click "Create"');
-    console.log('  3. Go to "Install App" → click "Install to Workspace" → "Allow"');
-    console.log('  4. Go to "Basic Information" → "App-Level Tokens" → "Generate Token"');
-    console.log('     Name it anything, add scope: connections:write → "Generate"\n');
+    console.log('  3. Go to "Install App" → click "Install to Workspace" → "Allow"\n');
     openBrowser(MANIFEST_URL);
     await ask('Press Enter once the app is created and installed...');
     console.log('');
   } else {
-    console.log(`\n${GREEN}Great.${RESET} You can find the tokens here:\n`);
-    console.log(`  Bot Token:  ${BLUE}https://api.slack.com/apps${RESET} → SmartBridge → OAuth & Permissions`);
-    console.log(`  App Token:  ${BLUE}https://api.slack.com/apps${RESET} → SmartBridge → Basic Information → App-Level Tokens\n`);
-    console.log(`${DIM}If you don't have access to the app settings, ask your workspace admin to share the tokens.${RESET}\n`);
+    console.log(`\n${GREEN}Great.${RESET} Find the Bot Token here:\n`);
+    console.log(`  ${BLUE}https://api.slack.com/apps${RESET} → SmartBridge → OAuth & Permissions\n`);
+    console.log(`${DIM}If you don't have access, ask your workspace admin to share the token.${RESET}\n`);
   }
 
   // Step 2: Bot Token
   console.log(`${BOLD}Step 2: Bot Token${RESET}`);
-  console.log(`${DIM}Find in: api.slack.com/apps → SmartBridge → OAuth & Permissions → Bot User OAuth Token${RESET}\n`);
+  console.log(`${DIM}api.slack.com/apps → SmartBridge → OAuth & Permissions → Bot User OAuth Token${RESET}\n`);
 
   const botToken = await ask('Bot Token (xoxb-...): ');
   if (!botToken.startsWith('xoxb-')) {
@@ -104,49 +103,40 @@ async function run() {
     process.exit(1);
   }
 
-  // Step 3: App Token
-  console.log(`\n${BOLD}Step 3: App-Level Token${RESET}`);
-  console.log(`${DIM}Find in: api.slack.com/apps → SmartBridge → Basic Information → App-Level Tokens${RESET}\n`);
-
-  const appToken = await ask('App Token (xapp-...): ');
-  if (!appToken.startsWith('xapp-')) {
-    console.log(`\n${RED}Must start with xapp-. Try again.${RESET}\n`);
-    process.exit(1);
-  }
-
-  // Step 4: Validate
+  // Step 3: Validate
   console.log(`\n${DIM}Validating...${RESET}`);
+  let workspace;
   try {
     const result = await slackAuthTest(botToken);
     if (!result.ok) {
       console.log(`${RED}Invalid token: ${result.error}${RESET}\n`);
       process.exit(1);
     }
-    console.log(`${GREEN}Connected to workspace: ${result.team}${RESET}\n`);
+    workspace = result.team;
+    console.log(`${GREEN}Connected to workspace: ${workspace}${RESET}\n`);
   } catch (err) {
     console.log(`${RED}Could not reach Slack: ${err.message}${RESET}\n`);
     process.exit(1);
   }
 
-  // Step 4: User ID
-  console.log(`${BOLD}Step 4: Your Slack User ID${RESET}`);
-  console.log(`${DIM}In Slack: click your profile → Profile → ⋮ (more) → Copy member ID${RESET}\n`);
+  // Step 3: User ID
+  console.log(`${BOLD}Step 3: Your Slack User ID${RESET}`);
+  console.log(`${DIM}In Slack: click your profile → ⋮ (more) → Copy member ID${RESET}\n`);
 
   const userId = await ask('Your User ID (U...): ');
   if (!userId.startsWith('U')) {
     console.log(`${YELLOW}Warning: User IDs usually start with U. Saving anyway.${RESET}`);
   }
 
-  // Save
-  const authResult = await slackAuthTest(botToken);
   config.update({
-    slack: { botToken, appToken, connected: true, workspaceName: authResult.team },
+    slack: { botToken, connected: true, workspaceName: workspace },
     userId,
+    mode: 'polling',
   });
 
   console.log(`\n${GREEN}${BOLD}Setup complete!${RESET}\n`);
   console.log(`  Config saved to: ${config.CONFIG_FILE}`);
-  console.log(`  Workspace:       ${authResult.team}`);
+  console.log(`  Workspace:       ${workspace}`);
   console.log(`  User ID:         ${userId}`);
   console.log(`\n  Start with: ${BLUE}npm start${RESET}\n`);
 }

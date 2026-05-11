@@ -4,16 +4,21 @@
   "description": "Connect Smartsheet Power Tools to Slack",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "node src/index.js start",
+    "start:relay": "node src/index.js start:relay",
     "setup": "node src/setup.js",
+    "relay:register": "node src/index.js relay:register",
+    "stop": "node src/index.js stop",
+    "status": "node src/index.js status",
     "disconnect": "node src/index.js disconnect"
   },
   "engines": {
     "node": ">=18.17"
   },
   "dependencies": {
-    "@slack/bolt": "^4.7.0",
-    "cross-spawn": "^7.0.6"
+    "@slack/web-api": "^7.0.0",
+    "cross-spawn": "^7.0.6",
+    "ws": "^8.17.0"
   },
   "license": "MIT"
 }
