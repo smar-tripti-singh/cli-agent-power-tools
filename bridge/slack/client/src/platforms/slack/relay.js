@@ -149,11 +149,20 @@ class SlackRelayPlatform extends Platform {
         log.info('authenticated', { queuedCount: msg.payload.queuedCount });
         break;
 
-      case 'auth_fail':
-        log.error('auth failed', { reason: msg.payload.reason });
+      case 'auth_fail': {
+        const reason = msg.payload.reason;
+        log.error('auth failed', { reason });
         this._stopping = true;
         this._ws.close();
+        if (reason === 'revoked' || reason === 'not_registered' || reason === 'invalid signature') {
+          // Token is permanently invalid — delete local config so user knows to re-register
+          try { fs.unlinkSync(RELAY_CONFIG_FILE); } catch {}
+          console.error('\n[SmartBridge] Your relay registration has been revoked or is invalid.');
+          console.error('  Run: npm run relay:register\n');
+          process.exit(1);
+        }
         break;
+      }
 
       case 'heartbeat':
         this._ws.send(JSON.stringify({
