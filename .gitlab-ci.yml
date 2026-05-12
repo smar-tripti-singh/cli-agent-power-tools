@@ -7,7 +7,7 @@ workflow:
     - if: $CI_COMMIT_TAG || $CI_COMMIT_BRANCH
 
 variables:
-  DEV_ENV_RUNNER: dev-conn-poc-shared-runner
+  DEV_ENV_RUNNER: dev-lwconnectors-shared-runner
 
 stages:
   - pre-build
@@ -27,6 +27,7 @@ MR Agent:
 # ── Deploy relay server to dev ───────────────────────────────
 deploy-relay/dev:
   stage: deploy
+  image: docker-hub.pipeline.smartsheet.com/dockerhub/node:20-alpine
   script:
     - cd bridge/slack/server
     - npm install --silent
