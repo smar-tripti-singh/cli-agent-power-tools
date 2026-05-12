@@ -1,6 +1,6 @@
 {
   "name": "smartbridge-relay",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "SmartBridge relay server — routes Slack events to user machines",
   "main": "src/index.js",
   "scripts": {
