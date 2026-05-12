@@ -5,8 +5,6 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js start",
-    "start:relay": "node src/index.js start:relay",
-    "setup": "node src/setup.js",
     "relay:register": "node src/index.js relay:register",
     "stop": "node src/index.js stop",
     "status": "node src/index.js status",
@@ -16,7 +14,6 @@
     "node": ">=18.17"
   },
   "dependencies": {
-    "@slack/web-api": "^7.0.0",
     "cross-spawn": "^7.0.6",
     "ws": "^8.17.0"
   },

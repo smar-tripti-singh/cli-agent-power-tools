@@ -58,7 +58,7 @@ async function run() {
     console.log(`  Expires: ${existing.expiresAt}\n`);
     const reuse = await ask('Re-register? (y/n): ');
     if (reuse.toLowerCase() !== 'y') {
-      console.log(`\nRun ${BLUE}npm run start:relay${RESET} to connect.\n`);
+      console.log(`\nRun ${BLUE}npm start${RESET} to connect.\n`);
       return;
     }
     console.log('');
@@ -128,7 +128,7 @@ async function run() {
   console.log(`  Config saved to: ${RELAY_CONFIG_FILE}`);
   console.log(`  Server:          ${serverUrl}`);
   console.log(`  Expires:         ${expiresAt}`);
-  console.log(`\n  Start with: ${BLUE}npm run start:relay${RESET}\n`);
+  console.log(`\n  Start with: ${BLUE}npm start${RESET}\n`);
 }
 
 run().catch((err) => {

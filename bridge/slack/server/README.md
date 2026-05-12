@@ -17,7 +17,7 @@ Slack ──Socket Mode──▶ Relay Server ──WebSocket──▶ User's ma
 
 - Node.js 18+
 - A server that stays on (EC2, VPS, or any always-on machine)
-- Slack app with Socket Mode enabled (see `../client/manifests/slack-app-manifest.json`)
+- Slack app with Socket Mode enabled (created during `./setup.sh`)
 
 ## Setup
 
@@ -26,18 +26,32 @@ cd bridge/slack/server
 ./setup.sh
 ```
 
-The script will ask for:
+The script walks through 5 steps:
 
-| Input | Where to find it |
+**Step 1: Slack App (one-time)**
+- Checks if SmartBridge already exists in your workspace
+- If not, prints a URL to open on your **local machine's browser** (not the server) — the manifest is pre-loaded, just pick your workspace and click Create
+- Guides you through installing the app and generating the App-Level Token
+
+**Step 2: Slack Tokens**
+
+| Token | Where to find it |
 |---|---|
 | App-Level Token (`xapp-...`) | api.slack.com/apps → SmartBridge → Basic Information → App-Level Tokens |
 | Bot Token (`xoxb-...`) | api.slack.com/apps → SmartBridge → OAuth & Permissions |
-| Registration code | Make it up — share this with your team |
-| Port | Default: 8443 |
 
-Then choose how to start:
+**Step 3: Registration Code**
+- Make it up — share this with your team (e.g. `acme-team-2026`)
+- Users will enter this once when registering their machine
+
+**Step 4: Port**
+- Default: 8443
+- Make sure this port is open in your firewall/security group
+
+**Step 5: Start**
 - **pm2** — recommended for production (auto-restarts, survives reboots)
 - **node** — for local testing (stops when terminal closes)
+- **skip** — start manually later
 
 ## After setup
 
@@ -51,7 +65,7 @@ Registration code: the-code-you-set
 Each user then runs in `bridge/slack/client/`:
 ```bash
 npm run relay:register   # enter server URL + registration code
-npm run start:relay
+npm start
 ```
 
 ## Admin commands
