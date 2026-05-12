@@ -69,8 +69,9 @@ class RelayMessage extends Message {
   }
 
   _send(type, payload) {
-    if (!this._ws || this._ws.readyState !== WebSocket.OPEN) return;
-    this._ws.send(JSON.stringify({
+    const ws = this._platform._ws;
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    ws.send(JSON.stringify({
       type,
       id: `${type}-${Date.now()}`,
       timestamp: Date.now(),
