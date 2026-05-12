@@ -29,6 +29,7 @@ deploy-relay/dev:
   stage: deploy
   image: docker-hub.pipeline.smartsheet.com/dockerhub/node:20-alpine
   script:
+    - npm install -g pm2 --silent
     - cd bridge/slack/server
     - npm install --silent
     - pm2 restart smartbridge-relay || pm2 start src/index.js --name smartbridge-relay
