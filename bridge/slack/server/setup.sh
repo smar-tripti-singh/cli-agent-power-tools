@@ -156,8 +156,20 @@ echo ""
 read -r -p "Port [8443]: " RELAY_PORT
 RELAY_PORT="${RELAY_PORT:-8443}"
 
-# Auto-generate JWT secret
-RELAY_JWT_SECRET=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
+# JWT secret — preserve existing unless admin explicitly wants to reset
+EXISTING_JWT_SECRET=$(grep "^RELAY_JWT_SECRET=" "$ENV_FILE" 2>/dev/null | cut -d'=' -f2)
+if [ -n "$EXISTING_JWT_SECRET" ]; then
+  echo ""
+  read -r -p "Regenerate JWT secret? All registered users will need to re-register. (y/n) [n]: " REGEN_SECRET
+  if [[ "$REGEN_SECRET" == "y" ]]; then
+    RELAY_JWT_SECRET=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
+    echo -e "${YELLOW}JWT secret regenerated. All users must run: npm run relay:register${RESET}"
+  else
+    RELAY_JWT_SECRET="$EXISTING_JWT_SECRET"
+  fi
+else
+  RELAY_JWT_SECRET=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
+fi
 
 # ── Write .env ────────────────────────────────────────────────
 
